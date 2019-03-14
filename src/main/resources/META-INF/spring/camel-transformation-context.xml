@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:camel="http://camel.apache.org/schema/spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+	<routeContext id="id_Transform" xmlns="http://camel.apache.org/schema/spring">
+		<!-- Transforming the PICK PGI Ok File -->
+
+		<route id="id_Route_Transform">
+			<from uri="direct:transformationPickPGI" />
+			<unmarshal ref="pickPGI_JAXB" />
+			<process ref="pickPGITransformation" />
+			<to uri="direct:sendToPickPGISAP" />
+			<onException id="id_OnAllException">
+				<exception>java.lang.Exception</exception>
+				<handled>
+					<constant>true</constant>
+				</handled>
+				<log logName="com.oup.ae.integration.pickpgi.routetotransform"
+					loggingLevel="ERROR"
+					message="Exception occurred during transformation !! The exception is : ${exchangeProperty.CamelExceptionCaught}" />
+				<to uri="direct:sendToError" />
+			</onException>
+
+		</route>
+	</routeContext>
+
+</beans>

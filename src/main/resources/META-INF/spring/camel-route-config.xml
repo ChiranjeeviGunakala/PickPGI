@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:camel="http://camel.apache.org/schema/spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+	<import resource="classpath:META-INF/spring/camel-transformation-context.xml" />
+	<import resource="classpath:META-INF/spring/camel-sent-to-sap-context.xml" />
+	<import resource="classpath:META-INF/spring/sapendpoint-configuration.xml" />
+	<import resource="classpath:META-INF/spring/camel-error-route.xml" />
+
+	<camelContext xmlns="http://camel.apache.org/schema/spring">
+
+		<routeContextRef ref="id_Transform" />
+		<routeContextRef ref="id_SendToSAP" />
+		<routeContextRef ref="id_ErrorRoute" />
+		<dataFormats>
+			<jaxb id="pickPGI_JAXB" contextPath="com.oup.ae.integration.pickpgi.pojo"
+				prettyPrint="true" />
+		</dataFormats>
+
+		<!-- Polling the File from KN FTP Location & Camel Pick's the Files only 
+			the file name should start with PGI -->
+		<route id="id_Route_MainRoute">
+			<from id="id_pull_kn_file"
+				uri="ftp://{{com.oup.ae.integration.pickpgi.kn.username}}@{{com.oup.ae.integration.pickpgi.kn.server}}:{{com.oup.ae.integration.pickpgi.kn.port}}/{{com.oup.ae.integration.pickpgi.kn.folder}}?password={{com.oup.ae.integration.pickpgi.kn.password}}&amp;filter=#knFileFilter&amp;binary=true&amp;throwExceptionOnConnectFailed=true&amp;maximumReconnectAttempts=0&amp;passiveMode=true&amp;doneFileName=${file:name.noext}.xml.go&amp;include=.*.xml&amp;delete=true&amp;localWorkDirectory={{com.oup.ae.integration.pickpgi.kn.kn-temp}}" />
+			<convertBodyTo type="java.lang.String" />
+			<log message="${body}" loggingLevel="DEBUG"
+				logName="com.oup.ae.integration.pickpgi.route" />
+			<camel:to
+				uri="log:com.oup.ae.integration.pickpgi.route?level=DEBUG&amp;showProperties=true&amp;multiline=true&amp;showHeaders=true"></camel:to>
+
+			<camel:setProperty propertyName="TempFileName">
+				<camel:simple>in.header.CamelFileNameConsumed</camel:simple>
+			</camel:setProperty>
+			<!-- Keeping the original file in exchange properties. So that it can 
+				be used later. -->
+			<camel:setProperty propertyName="originalFile">
+				<camel:simple>${body}</camel:simple>
+			</camel:setProperty>
+			<log
+				message="Keeping the file ${property.TempFileName} at temp location {{com.oup.ae.integration.pickpgi.kn.kn-temp}} "
+				loggingLevel="INFO" logName="com.oup.ae.integration.pickpgi.route" />
+			<toD id="id_send_TO_KN_TEMP"
+				uri="file:{{com.oup.ae.integration.pickpgi.kn.kn-temp}}?fileName=${exchangeProperty.TempFileName}.bup" />
+			<to uri="direct:transformationPickPGI" />
+
+			<onException id="id_Polling_KN_OnFTPException">
+				<exception>org.apache.camel.component.file.GenericFileOperationFailedException</exception>
+				<handled>
+					<constant>true</constant>
+				</handled>
+				<log logName="com.oup.ae.integration.pickpgi.route"
+					loggingLevel="ERROR"
+					message="${routeId} : GenericFileOperationFailedException, Could not poll the file from FTP location. The reason is ${exchangeProperty.CamelExceptionCaught} \n
+					The stacktrace is ${exception.stacktrace}" />
+			</onException>
+
+			<onException id="id_KN_Exception">
+				<exception>java.lang.Exception</exception>
+				<handled>
+					<constant>true</constant>
+				</handled>
+				<log logName="com.oup.ae.integration.pickpgi.route"
+					loggingLevel="ERROR"
+					message="${routeId} : Could not poll the file from FTP location. The reason is ${exchangeProperty.CamelExceptionCaught} \n
+					The stacktrace is ${exception.stacktrace}" />
+				<to uri="direct:sendToError" />
+			</onException>
+		</route>
+	</camelContext>
+
+</beans>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:camel="http://camel.apache.org/schema/spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+	<routeContext id="id_SendToSAP" xmlns="http://camel.apache.org/schema/spring">
+		<route id="id_Route_SendToSAP">
+			<from uri="direct:sendToPickPGISAP" />
+			<log loggingLevel="INFO" id="id_LogRequest"
+				message="MAKING THE REQUEST TO SAP WITH PAYLOAD -->${body}" logName="com.oup.ae.integration.pickpgi.routetosap" />
+			<to id="id_CallSAP" uri="sap-srfc-destination:sapRFCDest:Z_KN_IDOC_INPUT_PICK_PGI" />
+			<log loggingLevel="INFO" id="id_LogResponse" message="RESPONSE BACK FROM SAP-->${body}"
+				logName="com.oup.ae.integration.pickpgi.routetosap" />
+			<process ref="responseProcesssor"></process>
+
+			<onException id="id_JcoException_retry">
+				<exception>com.sap.conn.jco.JCoException</exception>
+				<onWhen>
+					<simple>${exception.stacktrace} contains "{{com.oup.ae.integration.pickpgi.error10060WhenSAPIsDown}}" or ${exception.stacktrace} contains "{{com.oup.ae.integration.pickpgi.error10054WhenSAPIsDown}}"</simple>
+				</onWhen>
+				<redeliveryPolicy
+					maximumRedeliveries="{{com.oup.ae.integration.pickpgi.retryForRFCCall}}"
+					redeliveryDelay="{{com.oup.ae.integration.pickpgi.redeliveryDelayForRFCCall}}" 
+					retryAttemptedLogLevel="WARN" logRetryAttempted="true"/>
+				<handled>
+					<constant>true</constant>
+				</handled>
+				<log logName="com.oup.ae.integration.pickpgi.routetosap"
+					loggingLevel="ERROR"
+					message="JCoException occurred due to SAP unavailability or connection to SAP broken due to network issues, re-try happened for sending IDOC !! The exception is : ${exchangeProperty.CamelExceptionCaught}" />
+				<to uri="direct:sendToError" />
+			</onException>
+			
+			<onException id="id_JcoException">
+				<exception>com.sap.conn.jco.JCoException</exception>
+				<handled>
+					<constant>true</constant>
+				</handled>
+				<log logName="com.oup.ae.integration.pickpgi.routetosap"
+					loggingLevel="ERROR"
+					message="JCoException occurred due to other reason at SAP end, re-try not required for sending IDOC !! The exception is : ${exchangeProperty.CamelExceptionCaught}" />
+				<to uri="direct:sendToError" />
+			</onException>
+
+			<onException id="id_OnAllException">
+				<exception>java.lang.Exception</exception>
+				<handled>
+					<constant>true</constant>
+				</handled>
+				<log logName="com.oup.ae.integration.pickpgi.routetosap"
+					loggingLevel="ERROR"
+					message="Exception occurred !!The exception is : ${exchangeProperty.CamelExceptionCaught} \n
+					The stacktrace is ${exception.stacktrace}" />
+				<to uri="direct:sendToError" />
+			</onException>
+
+		</route>
+	</routeContext>
+
+</beans>

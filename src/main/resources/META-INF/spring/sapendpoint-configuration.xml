@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:camel="http://camel.apache.org/schema/spring" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+	<!-- Configures the Inbound and Outbound SAP Connections -->
+	<bean class="org.fusesource.camel.component.sap.SapConnectionConfiguration"
+		id="springManagedSapConfiguration">
+		<property name="destinationDataStore">
+			<map>
+				<entry key="sapRFCDest" value-ref="springManagedSCWMSAPDestinationData" />
+			</map>
+		</property>
+	</bean>
+	<!-- Configures an Outbound SAP Connection -->
+	<!-- *** Please enter the connection property values for your environment 
+		*** -->
+	<bean
+		class="org.fusesource.camel.component.sap.model.rfc.impl.DestinationDataImpl"
+		id="springManagedSCWMSAPDestinationData">
+		<property name="ashost" value="${sap.outbound.connection.ashost}" />
+		<property name="sysnr" value="${sap.outbound.connection.sysnr}" />
+		<property name="client" value="${sap.outbound.connection.client}" />
+		<property name="user" value="${sap.outbound.connection.user}" />
+		<property name="passwd" value="${sap.outbound.connection.passwd}" />
+		<property name="lang" value="EN" />
+	</bean>
+
+</beans>

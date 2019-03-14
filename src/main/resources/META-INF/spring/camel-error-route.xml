@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:camel="http://camel.apache.org/schema/spring"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+       http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+	<routeContext id="id_ErrorRoute"
+		xmlns="http://camel.apache.org/schema/spring">
+		<!-- -->
+		<route id="id_Route_Error">
+			<from uri="direct:sendToError" />
+			<log logName="com.oup.ae.integration.pickpgi.errorroute"
+					loggingLevel="DEBUG"
+					message="In Error Route" />
+			<camel:setBody>
+				<camel:simple>exchangeProperty.originalFile</camel:simple>
+			</camel:setBody>
+			<toD id="id_send_TO_KN_ERROR"
+				uri="file:{{com.oup.ae.integration.pickpgi.kn.failedlocation}}?fileName=${exchangeProperty.TempFileName}.error" />
+			<log logName="com.oup.ae.integration.pickpgi.errorroute"
+					loggingLevel="DEBUG"
+					message="Error file ${exchangeProperty.TempFileName}.error kept at location {{com.oup.ae.integration.pickpgi.kn.failedlocation}} " />
+			<onException id="id_KN_Exception">
+				<exception>java.lang.Exception</exception>
+				<handled>
+					<constant>true</constant>
+				</handled>
+				<log logName="com.oup.ae.integration.pickpgi.errorroute"
+					loggingLevel="ERROR"
+					message="${routeId} : Cannot write error file ${exchangeProperty.TempFileName}. The reason is ${exchangeProperty.CamelExceptionCaught} \n
+					The stacktrace is ${exception.stacktrace}" />
+			</onException>
+		</route>
+	</routeContext>
+
+</beans>

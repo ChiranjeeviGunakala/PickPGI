@@ -1,0 +1,204 @@
+spring:
+  application: 
+    name: SCWM-AE-HK-PickPGI  
+server:
+  port: 8080
+security:
+  basic:
+    enabled: false
+management:
+  security:
+    enabled: false
+  metrics:
+    export:
+      prometheus: 
+        enabled: true
+    distribution:
+      percentiles[http.server.requests]: 0.95, 0.99
+      percentiles-histogram[http.server.requests]: true
+      sla[http.server.requests]: 10ms, 100ms
+eureka:
+  client:
+    enabled: false
+com:
+  oup:
+    ae:
+      integration:
+        pickpgi: 
+          retryForRFCCall: 48
+          redeliveryDelayForRFCCall: 1800000
+          error10060WhenSAPIsDown: ERRNO       10060
+          error10054WhenSAPIsDown: ERRNO       10054
+          kn:
+            server: localhost
+            port: 21
+            username: gunakalc
+            password: ftpoup
+            folder: FROM
+            kn-temp: C:/CG/IN/SCWM/AE/${spring.application.name}/default/temp
+            failedlocation: C:/CG/OUT/SCWM/AE/${spring.application.name}/default/error
+sap: 
+  outbound:
+    connection:
+      ashost: HKHKOAPP09.hk.oup.com
+      sysnr: 00
+      client: 800
+      user: SCHWMIDOC
+      passwd: Idoc@china33
+      lang: EN
+---
+spring:
+  profiles: dev
+  application: 
+    name: SCWM-AE-HK-PickPGI  
+server:
+  port: 8080
+security:
+  basic:
+    enabled: false
+management:
+  security:
+    enabled: false
+  metrics:
+    export:
+      prometheus: 
+        enabled: true
+    distribution:
+      percentiles[http.server.requests]: 0.95, 0.99
+      percentiles-histogram[http.server.requests]: true
+      sla[http.server.requests]: 10ms, 100ms
+eureka:
+  client:
+    enabled: true
+    service-url:  
+      defaultZone: http://dev-oupeureka:8761/eureka/
+com:
+  oup:
+    ae:
+      integration:
+        pickpgi: 
+          retryForRFCCall: 48
+          redeliveryDelayForRFCCall: 1800000
+          error10060WhenSAPIsDown: ERRNO       10060
+          error10054WhenSAPIsDown: ERRNO       10054
+          kn:
+            server: ukftp-auto.oup.com
+            port: 21
+            username: fharbinger
+            password: farafara
+            folder: SCWM/AE/in
+            kn-temp: /IN/SCWM/AE/${spring.application.name}/dev/temp
+            failedlocation: /OUT/SCWM/AE/${spring.application.name}/dev/error
+sap: 
+  outbound:
+    connection:
+      ashost: HKHKOAPP09.hk.oup.com
+      sysnr: 00
+      client: 800
+      user: SCHWMIDOC
+      passwd: Idoc@china33
+      lang: EN
+---
+spring:
+  profiles: uat
+  application: 
+    name: SCWM-AE-HK-PickPGI  
+server:
+  port: 8080
+security:
+  basic:
+    enabled: false
+management:
+  security:
+    enabled: false
+  metrics:
+    export:
+      prometheus: 
+        enabled: true
+    distribution:
+      percentiles[http.server.requests]: 0.95, 0.99
+      percentiles-histogram[http.server.requests]: true
+      sla[http.server.requests]: 10ms, 100ms
+eureka:
+  client:
+    enabled: false
+    service-url:  
+      defaultZone: http://uat-oupeureka:8761/eureka/
+com:
+  oup:
+    ae:
+      integration:
+        pickpgi: 
+          retryForRFCCall: 48
+          redeliveryDelayForRFCCall: 1800000
+          error10060WhenSAPIsDown: ERRNO       10060
+          error10054WhenSAPIsDown: ERRNO       10054
+          kn:
+            server: ukftp-auto.oup.com
+            port: 21
+            username: fharbinger
+            password: farafara
+            folder: SCWM/AE/in
+            kn-temp: /IN/SCWM/AE/${spring.application.name}/uat/temp
+            failedlocation: /OUT/SCWM/AE/${spring.application.name}/uat/error
+sap: 
+  outbound:
+    connection:
+      ashost: HKHKOAPP10.hk.oup.com
+      sysnr: 00
+      client: 300
+      user: SCHWMIDOC
+      passwd: Idoc@china33
+      lang: EN
+---
+spring:
+  profiles: prod
+  application: 
+    name: SCWM-AE-HK-PickPGI  
+server:
+  port: 8080
+security:
+  basic:
+    enabled: false
+management:
+  security:
+    enabled: false
+  metrics:
+    export:
+      prometheus: 
+        enabled: true
+    distribution:
+      percentiles[http.server.requests]: 0.95, 0.99
+      percentiles-histogram[http.server.requests]: true
+      sla[http.server.requests]: 10ms, 100ms
+eureka:
+  client:
+    enabled: true
+    service-url:  
+      defaultZone: http://prod-oupeureka:8761/eureka/
+com:
+  oup:
+    ae:
+      integration:
+        pickpgi: 
+          retryForRFCCall: 48
+          redeliveryDelayForRFCCall: 1800000
+          error10060WhenSAPIsDown: ERRNO       10060
+          error10054WhenSAPIsDown: ERRNO       10054
+          kn:
+            server: ukftp-auto.oup.com
+            port: 21
+            username: harbinger
+            password: k12aA%2519
+            folder: SCWM/AE/in
+            kn-temp: /IN/SCWM/AE/${spring.application.name}/prod/temp
+            failedlocation: /OUT/SCWM/AE/${spring.application.name}/prod/error
+sap: 
+  outbound:
+    connection:
+      ashost: HKHKOAPP12.hk.oup.com
+      sysnr: 00
+      client: 300
+      user: SCHWMIDOC
+      passwd: Idoc@china33
+      lang: EN
